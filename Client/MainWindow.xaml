@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:viewModels="clr-namespace:Client.ViewModels"
         xmlns:valueConverters="clr-namespace:Client.ValueConverters"
-        Title="SignalR / RX Demo" Height="350" Width="525" 
+        Title="NetMQ / RX Demo" Height="350" Width="525" 
         WindowState="Maximized"
         Background="#ff656565">
     

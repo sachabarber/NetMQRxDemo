@@ -12,12 +12,13 @@ using NetMQServer.Ticker;
 namespace NetMQServer
 {
     public class MainWindowViewModel : IMainWindowViewModel
-    {                
+    {
         private readonly ITickerPublisher tickerPublisher;
         private readonly ITickerRepository tickerRepository;
         private Random rand;
         private static readonly ILog Log = LogManager.GetLogger(typeof(MainWindowViewModel));
         private CancellationTokenSource autoRunningCancellationToken;
+        private Task autoRunningTask;
 
 
         public MainWindowViewModel(ITickerPublisher tickerPublisher, ITickerRepository tickerRepository)
@@ -27,12 +28,12 @@ namespace NetMQServer
             this.rand = new Random();
 
             AutoTickerStartCommand = new DelegateCommand(AutoRunning);
-            AutoTickerStopCommand = new DelegateCommand(() => 
+            AutoTickerStopCommand = new DelegateCommand(() =>
             {
                 if (autoRunningCancellationToken != null)
                 {
                     autoRunningCancellationToken.Cancel();
-                }                    
+                }
             });
             SendOneTickerCommand = new DelegateCommand(SendOneManualFakeTicker);
             StartCommand = new DelegateCommand(StartServer);
@@ -47,14 +48,16 @@ namespace NetMQServer
 
         public void Start()
         {
-            StartServer();           
+            StartServer();
         }
 
         private void AutoRunning()
         {
             autoRunningCancellationToken = new CancellationTokenSource();
-            Task.Run(async () =>
+            autoRunningTask = Task.Run(async () =>
             {
+                // Publisher is not thread safe, so while the auto ticker is running only the autoticker is allowed to access the publisher
+
                 while (!autoRunningCancellationToken.IsCancellationRequested)
                 {
                     SendOneManualFakeTicker();
@@ -72,11 +75,11 @@ namespace NetMQServer
 
             if (flipPoint > 50)
             {
-                currentTicker.Price += currentTicker.Price/30;
+                currentTicker.Price += currentTicker.Price / 30;
             }
             else
             {
-                currentTicker.Price -= currentTicker.Price/30;
+                currentTicker.Price -= currentTicker.Price / 30;
             }
 
             tickerRepository.StoreTicker(currentTicker);
@@ -95,7 +98,13 @@ namespace NetMQServer
             if (autoRunningCancellationToken != null)
             {
                 autoRunningCancellationToken.Cancel();
-            }    
+
+                // Publisher is not thread safe, so while the auto ticker is running only the autoticker is allowed to access the publisher
+                // Therefore before we can stop the publisher we have to wait for the autoticker task to complete
+                autoRunningTask.Wait();
+
+                autoRunningCancellationToken = null;
+            }
             tickerPublisher.Stop();
         }
     }

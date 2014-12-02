@@ -67,7 +67,7 @@ namespace Client.Comms
                 if (subscriberSocket != null)
                 {
                     subscriberSocket.Dispose();
-                }                
+                }
             }
 
             private void Connect()
@@ -75,7 +75,7 @@ namespace Client.Comms
                 // getting the snapshot
                 using (RequestSocket requestSocket = context.CreateRequestSocket())
                 {
-                    
+
                     requestSocket.Connect(string.Format("tcp://{0}:{1}", address, SnapshotProtocol.Port));
 
                     requestSocket.Send(SnapshotProtocol.GetTradessCommand);
@@ -94,13 +94,13 @@ namespace Client.Comms
                         // calling on error from poller thread block the application
                         Task.Run(() => subject.OnError(new Exception("No response from server")));
                         return;
-                    }                    
+                    }
 
                     while (json != SnapshotProtocol.EndOfTickers)
                     {
-                        PublishTicker(json);                        
+                        PublishTicker(json);
 
-                        json = requestSocket.ReceiveString();                            
+                        json = requestSocket.ReceiveString();
                     }
                 }
 
@@ -120,7 +120,7 @@ namespace Client.Comms
             private void TimeoutElapsed(object sender, NetMQTimerEventArgs e)
             {
                 // no need to reconnect, the client would be recreated because of RX
-                
+
                 // because of RX internal stuff invoking on the poller thread block the entire application, so calling on Thread Pool
                 Task.Run(() => subject.OnError(new Exception("Disconnected from server")));
             }
@@ -142,10 +142,7 @@ namespace Client.Comms
                 if (topic == StreamingProtocol.TradesTopic)
                 {
                     string json = subscriberSocket.ReceiveString();
-                    if (json != ActorKnownMessages.END_PIPE)
-                    {
-                        PublishTicker(json);
-                    }
+                    PublishTicker(json);
                 }
                 else if (topic == StreamingProtocol.HeartbeatTopic)
                 {
@@ -168,10 +165,10 @@ namespace Client.Comms
 
             this.actor = new Actor<object>(context, new ShimHandler(context, subject, address), null);
             this.disposables.Add(this.actor);
-            
+
             this.disposables.Add(NetMQHeartBeatClient.Instance.GetConnectionStatusStream()
                 .Where(x => x.ConnectionStatus == ConnectionStatus.Closed)
-                .Subscribe(x => 
+                .Subscribe(x =>
                     this.subject.OnError(new InvalidOperationException("Connection to server has been lost"))));
         }
 

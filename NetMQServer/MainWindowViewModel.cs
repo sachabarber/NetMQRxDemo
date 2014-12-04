@@ -56,8 +56,8 @@ namespace NetMQServer
             autoRunningCancellationToken = new CancellationTokenSource();
             autoRunningTask = Task.Run(async () =>
             {
-                // Publisher is not thread safe, so while the auto ticker is running only the autoticker is allowed to access the publisher
-
+                //Publisher is not thread safe, so while the auto ticker is 
+                //running only the autoticker is allowed to access the publisher
                 while (!autoRunningCancellationToken.IsCancellationRequested)
                 {
                     SendOneManualFakeTicker();
@@ -99,8 +99,9 @@ namespace NetMQServer
             {
                 autoRunningCancellationToken.Cancel();
 
-                // Publisher is not thread safe, so while the auto ticker is running only the autoticker is allowed to access the publisher
-                // Therefore before we can stop the publisher we have to wait for the autoticker task to complete
+                // Publisher is not thread safe, so while the auto ticker is running only the autoticker is 
+                // allowed to access the publisher. Therefore before we can stop the publisher we have to 
+                // wait for the autoticker task to complete
                 autoRunningTask.Wait();
 
                 autoRunningCancellationToken = null;

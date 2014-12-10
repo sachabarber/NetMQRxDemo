@@ -143,6 +143,10 @@ namespace Client.Comms
                 {
                     string json = subscriberSocket.ReceiveString();
                     PublishTicker(json);
+
+                    // reset timeout timer also when a quote is received
+                    timeoutTimer.Enable = false;
+                    timeoutTimer.Enable = true;
                 }
                 else if (topic == StreamingProtocol.HeartbeatTopic)
                 {

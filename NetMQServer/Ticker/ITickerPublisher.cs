@@ -11,6 +11,7 @@ namespace NetMQServer.Ticker
     {
         void Start();
         void Stop();
-        void PublishTrade(TickerDto ticker);        
+        void PublishTrade(TickerDto ticker);   
+     
     }
 }

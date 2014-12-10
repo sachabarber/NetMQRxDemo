@@ -36,15 +36,12 @@ namespace Common.ViewModels
             _execute();
         }
 
-        public event EventHandler CanExecuteChanged;
-
-        public void RaiseCanExecuteChanged()
+        public event EventHandler CanExecuteChanged
         {
-            var canExecuteChanged = CanExecuteChanged;
-            if (canExecuteChanged != null)
-            {
-                canExecuteChanged(this, EventArgs.Empty);
-            }
+            add { CommandManager.RequerySuggested += value; }
+            remove { CommandManager.RequerySuggested -= value; }
         }
+
+        
     }
 }

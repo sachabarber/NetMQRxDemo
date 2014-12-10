@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Navigation;
 using Common;
 using NetMQ;
 using NetMQ.Actors;
@@ -90,6 +91,7 @@ namespace NetMQServer.Ticker
 
             private void OnShimReady(object sender, NetMQSocketEventArgs e)
             {
+   
                 string command = e.Socket.ReceiveString();
 
                 switch (command)
@@ -99,12 +101,13 @@ namespace NetMQServer.Ticker
                         break;
                     case PublishTicker:
                         string topic = e.Socket.ReceiveString();
-                        string json = e.Socket.ReceiveString();                        
+                        string json = e.Socket.ReceiveString();
                         publisherSocket.
                             SendMore(topic).
                             Send(json);
                         break;
                 }
+
             }
         }
 
@@ -120,20 +123,31 @@ namespace NetMQServer.Ticker
 
         public void Start()
         {
+            if (actor != null)
+                return;
+
             actor = new Actor<object>(context, new ShimHandler(context, tickerRepository), null);
         }
 
         public void Stop()
         {
-            actor.Dispose();
+            if (actor != null)
+            {
+                actor.Dispose();
+                actor = null;
+            }
         }        
 
         public void PublishTrade(TickerDto ticker)
         {
+            if (actor == null)
+                return;
+
             actor.
                 SendMore(PublishTicker).
                 SendMore(StreamingProtocol.TradesTopic).
                 Send(JsonConvert.SerializeObject(ticker));                
         }
+
     }
 }

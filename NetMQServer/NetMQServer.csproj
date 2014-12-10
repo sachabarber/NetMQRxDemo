@@ -66,7 +66,6 @@
     <Compile Include="Ticker\ITickerRepository.cs" />
     <Compile Include="Ticker\NetMQPublisher.cs" />
     <Compile Include="Ticker\TickerRepository.cs" />
-    <Compile Include="IMainWindowViewModel.cs" />
     <Compile Include="IOC\Bootstrapper.cs" />
     <Compile Include="MainWindowViewModel.cs" />
     <Compile Include="MainWindow.xaml.cs">

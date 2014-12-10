@@ -12,7 +12,7 @@ using NetMQServer.Ticker;
 
 namespace NetMQServer
 {
-    public class MainWindowViewModel : IMainWindowViewModel
+    public class MainWindowViewModel
     {
         private readonly ITickerPublisher tickerPublisher;
         private readonly ITickerRepository tickerRepository;
@@ -20,12 +20,8 @@ namespace NetMQServer
         private static readonly ILog Log = LogManager.GetLogger(typeof(MainWindowViewModel));
         private CancellationTokenSource autoRunningCancellationToken;
         private Task autoRunningTask;
-
         private bool serverStarted;
         private bool autoTickerStarted;
-
-        private DelegateCommand startCommand;
-        private DelegateCommand stopCommand;
 
         public MainWindowViewModel(ITickerPublisher tickerPublisher, ITickerRepository tickerRepository)
         {
@@ -36,49 +32,50 @@ namespace NetMQServer
             serverStarted = false;
             autoTickerStarted = false;
 
-            AutoTickerStartCommand = new DelegateCommand(AutoRunning, () => serverStarted && !autoTickerStarted);
-            AutoTickerStopCommand = new DelegateCommand(() =>
-            {
-                if (autoRunningCancellationToken != null)
+            AutoTickerStartCommand = new DelegateCommand(
+                AutoRunning, 
+                () => serverStarted && !autoTickerStarted);
+            
+            AutoTickerStopCommand = new DelegateCommand(
+                () =>
                 {
-                    autoRunningCancellationToken.Cancel();
-                    autoRunningTask.Wait();
-                    autoTickerStarted = false;
-                    RaiseCanChangeForAllButtons();
-                }
-            }, () => serverStarted && autoTickerStarted);
-            SendOneTickerCommand = new DelegateCommand(SendOneManualFakeTicker, () => serverStarted && !autoTickerStarted);
-            startCommand = new DelegateCommand(StartServer, () => !serverStarted);
-            stopCommand = new DelegateCommand(StopServer, () => serverStarted);
+                    if (autoRunningCancellationToken != null)
+                    {
+                        autoRunningCancellationToken.Cancel();
+                        autoRunningTask.Wait();
+                        autoTickerStarted = false;
+                    }
+                }, 
+                () => serverStarted && autoTickerStarted);
+
+            SendOneTickerCommand = new DelegateCommand(
+                SendOneManualFakeTicker, 
+                () => serverStarted && !autoTickerStarted);
+
+            StartCommand = new DelegateCommand(
+                StartServer, 
+                () => !serverStarted);
+            
+            StopCommand = new DelegateCommand(
+                StopServer, 
+                () => serverStarted);
         }
 
         public DelegateCommand AutoTickerStartCommand { get; set; }
         public DelegateCommand AutoTickerStopCommand { get; set; }
         public DelegateCommand SendOneTickerCommand { get; set; }
-
-        public ICommand StartCommand { get { return startCommand; } }
-
-        public ICommand StopCommand { get { return stopCommand; } }
+        public DelegateCommand StartCommand { get; set; }
+        public DelegateCommand StopCommand { get; set; }
 
         public void Start()
         {
             StartServer();
         }
 
-        private void RaiseCanChangeForAllButtons()
-        {
-            AutoTickerStartCommand.RaiseCanExecuteChanged();
-            AutoTickerStopCommand.RaiseCanExecuteChanged();
-            SendOneTickerCommand.RaiseCanExecuteChanged();
-            startCommand.RaiseCanExecuteChanged();
-            stopCommand.RaiseCanExecuteChanged();
-        }
 
         private void AutoRunning()
         {
             autoTickerStarted = true;
-            RaiseCanChangeForAllButtons();
-
             autoRunningCancellationToken = new CancellationTokenSource();
             autoRunningTask = Task.Run(async () =>
             {
@@ -116,10 +113,7 @@ namespace NetMQServer
         private void StartServer()
         {
             serverStarted = true;
-            RaiseCanChangeForAllButtons();
-
             tickerPublisher.Start();
-
             AutoRunning();
         }
 
@@ -142,7 +136,6 @@ namespace NetMQServer
             tickerPublisher.Stop();
 
             serverStarted = false;
-            RaiseCanChangeForAllButtons();
         }
     }
 }
